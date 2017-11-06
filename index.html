@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Bitcoin | Buy & Sell</title>
+    <style>
+        #bitcoin {
+            position: relative;
+            max-height: 90vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="bitcoin()">
+    <canvas id="bitcoin"></canvas>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
+    <script>
+        let sellArr = [];
+        let buyArr = [];
+        let dArr = [];
+        function addData(chart, buy, sell,label) {
+            chart.data.labels = label;
+            chart.data.datasets[0].data = buy;
+            chart.data.datasets[1].data = sell;
+            chart.update(0);
+        }
+        var ctx = document.getElementById("bitcoin").getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Buy',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255,99,132,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Sell',
+                    backgroundColor: 'rgba(0,255,100, 0.2)',
+                    borderColor: 'rgba(0,255,100,1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'Bitcoin',
+                    fontSize : '25'
+                }
+            }
+        });
+        function bitcoin() {
+            fetch('https://api.zebpay.com/api/v1/ticker?currencyCode=INR')
+            .then(response => response.json())
+            .then(data => {
+                let d = moment().format('h:mm:ss a');
+                let sell = data.sell;
+                let buy = data.buy;
+                if (buyArr.length > 20) {
+                    buyArr.splice(0,1);
+                }
+                if (sellArr.length > 20) {
+                    sellArr.splice(0,1);
+                }
+                if (dArr.length > 20) {
+                    dArr.splice(0,1);
+                }
+                dArr.push(d);
+                sellArr.push(sell);
+                buyArr.push(buy);
+                addData(myChart,buyArr,sellArr,dArr);
+            })
+            .catch(err => console.log(err));
+        }
+        setInterval(bitcoin,5000);
+    </script>
+</body>
+</html>
