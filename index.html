@@ -11,13 +11,27 @@
             max-height: 90vh;
             width: 100%;
         }
+        .light{
+            font-weight: lighter;
+        }
+        .bold{
+            font-weight: bold;
+        }
+        .stats{
+            margin-left: 8rem;
+            font-size: 1.4rem;
+        }
     </style>
 </head>
 <body onload="bitcoin()">
+    <span class="stats light">Buy :       <span class="bold" id="c_buy"></span></span>
+    <span class="stats light">Sell :      <span class="bold" id="c_sell"></span></span>
+    <span class="stats light">Volume :    <span class="bold" id="c_volume"></span></span>
+    <span class="stats light">Refreshes in :    <span class="bold" id="refresh_timer"></span></span>
     <canvas id="bitcoin"></canvas>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
     <script>
         let sellArr = [];
         let buyArr = [];
@@ -60,23 +74,47 @@
                 let d = moment().format('h:mm:ss a');
                 let sell = data.sell;
                 let buy = data.buy;
-                if (buyArr.length > 20) {
+                if (buyArr.length > 40) {
                     buyArr.splice(0,1);
                 }
-                if (sellArr.length > 20) {
+                if (sellArr.length > 40) {
                     sellArr.splice(0,1);
                 }
-                if (dArr.length > 20) {
+                if (dArr.length > 40) {
                     dArr.splice(0,1);
                 }
                 dArr.push(d);
                 sellArr.push(sell);
                 buyArr.push(buy);
                 addData(myChart,buyArr,sellArr,dArr);
+                $('#c_buy').text(buy.toLocaleString('en-IN', {
+                                                        maximumFractionDigits: 2,
+                                                        style: 'currency',
+                                                        currency: 'INR'
+                                                    }));
+                $('#c_sell').text(sell.toLocaleString('en-IN', {
+                                                        maximumFractionDigits: 2,
+                                                        style: 'currency',
+                                                        currency: 'INR'
+                                                    }));
+                $('#c_volume').text(data.volume.toLocaleString('en-IN', {
+                                                        maximumFractionDigits: 2,
+                                                        style: 'currency',
+                                                        currency: 'INR'
+                                                    }));
+                var max=10;
+                setInterval(function() {
+                    if(max){
+                        $('#refresh_timer').text(max--);
+                    }
+                    else {
+                        return;
+                    }
+                },1000);
             })
             .catch(err => console.log(err));
         }
-        setInterval(bitcoin,5000);
+        setInterval(bitcoin,10000); //10 sec setInterval
     </script>
 </body>
 </html>
