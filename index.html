@@ -36,6 +36,7 @@
         let sellArr = [];
         let buyArr = [];
         let dArr = [];
+        let refresh_in=30;
         function addData(chart, buy, sell,label) {
             chart.data.labels = label;
             chart.data.datasets[0].data = buy;
@@ -102,7 +103,7 @@
                                                         style: 'currency',
                                                         currency: 'INR'
                                                     }));
-                var max=10;
+                var max=refresh_in;
                 setInterval(function() {
                     if(max){
                         $('#refresh_timer').text(max--);
@@ -114,7 +115,7 @@
             })
             .catch(err => console.log(err));
         }
-        setInterval(bitcoin,30000); //30 sec setInterval
+        setInterval(bitcoin,refresh_in*1000); //30 sec setInterval
     </script>
 </body>
 </html>
