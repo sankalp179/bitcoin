@@ -5,38 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Bitcoin | Buy & Sell</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
     <style>
         #bitcoin {
             position: relative;
             max-height: 90vh;
             width: 100%;
         }
-        .light{
-            font-weight: lighter;
-        }
-        .bold{
-            font-weight: bold;
-        }
-        .stats{
-            margin-left: 8rem;
-            font-size: 1.4rem;
-        }
     </style>
 </head>
-<body onload="bitcoin()">
-    <span class="stats light">Buy :       <span class="bold" id="c_buy"></span></span>
-    <span class="stats light">Sell :      <span class="bold" id="c_sell"></span></span>
-    <span class="stats light">Volume :    <span class="bold" id="c_volume"></span></span>
-    <span class="stats light">Refreshes in :    <span class="bold" id="refresh_timer"></span></span>
+<body onload="init()">
+    <div class="container m-3">
+        <div class="row">
+            <div class="card card-body col-sm-5 mx-4 font-weight-light">
+                <h4 class="text-center">Rates</h4>
+                Buy :       <span class="font-weight-bold" id="c_buy"></span>
+                Sell :      <span class="font-weight-bold" id="c_sell"></span>
+                Volume :    <span class="font-weight-bold" id="c_volume"></span>
+            </div>
+
+            <div class="card card-body col-sm-4 ml-1">
+                <h4 class="text-center">Valuation</h4>
+                Quantity : <input id="pf_qty_ip" type="number"><br>
+                Valuation : <span id="pf_buy" class="font-weight-bold"></span><br>
+                Sell at : <span id="pf_sell" class="font-weight-bold"></span><br>
+            </div>
+            <div class="card card-body col-sm-2 ml-1 text-center">
+                <span class="mx-4 font-weight-light">Refreshes in<br><span class="font-weight-bold" id="refresh_timer"></span><br>secs</span>
+            </div>
+        </div>
+    </div>
+
+
     <canvas id="bitcoin"></canvas>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
     <script>
         let sellArr = [];
         let buyArr = [];
         let dArr = [];
         let refresh_in=30;
+        let max_data_set=120;
+        var l_sell=0,l_buy=0;
+        var pf_qty=0.08;
+        function init(){
+            if(getCookie('pf_qty').trim()){
+                pf_qty=Number(getCookie('pf_qty'));
+                $('#pf_qty_ip').val(pf_qty);
+            }
+            else{
+                $('#pf_qty_ip').val(pf_qty);
+            }
+            bitcoin();
+            $('#pf_qty_ip').on('keyup',()=>{
+                pf_valuate();
+                setCookie('pf_qty',Number($('#pf_qty_ip').val()));
+            });
+        }
+
+        function pf_valuate(){
+            var pf=Number($('#pf_qty_ip').val())||0;
+            $('#pf_buy').text((l_buy*pf).toLocaleString('en-IN', {
+                                                    maximumFractionDigits: 2,
+                                                    style: 'currency',
+                                                    currency: 'INR'
+                                                }));
+            $('#pf_sell').text((l_sell*pf).toLocaleString('en-IN', {
+                                                    maximumFractionDigits: 2,
+                                                    style: 'currency',
+                                                    currency: 'INR'
+                                                }));
+        }
+
         function addData(chart, buy, sell,label) {
             chart.data.labels = label;
             chart.data.datasets[0].data = buy;
@@ -75,18 +119,21 @@
                 let d = moment().format('h:mm:ss a');
                 let sell = data.sell;
                 let buy = data.buy;
-                if (buyArr.length > 40) {
+                l_sell=sell;
+                l_buy=buy;
+                if (buyArr.length > max_data_set) {
                     buyArr.splice(0,1);
                 }
-                if (sellArr.length > 40) {
+                if (sellArr.length > max_data_set) {
                     sellArr.splice(0,1);
                 }
-                if (dArr.length > 40) {
+                if (dArr.length > max_data_set) {
                     dArr.splice(0,1);
                 }
                 dArr.push(d);
                 sellArr.push(sell);
                 buyArr.push(buy);
+                pf_valuate();
                 addData(myChart,buyArr,sellArr,dArr);
                 $('#c_buy').text(buy.toLocaleString('en-IN', {
                                                         maximumFractionDigits: 2,
@@ -116,6 +163,37 @@
             .catch(err => console.log(err));
         }
         setInterval(bitcoin,refresh_in*1000); //30 sec setInterval
+
+
+        function setCookie(cname, cvalue, exminutes) {
+        	if (typeof exminutes == "undefined") {
+        		exminutes = 60*24*365; //1 yr
+        	}
+            var d = new Date();
+            d.setTime(d.getTime() + (exminutes*60*1000));
+            var expires = "expires="+ d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for(var i = 0; i <ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        function deleteCookie(name){
+             document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        }
+
     </script>
 </body>
 </html>
