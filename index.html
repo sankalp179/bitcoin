@@ -113,7 +113,8 @@
             }
         });
         function bitcoin() {
-            fetch('https://api.zebpay.com/api/v1/ticker?currencyCode=INR')
+            // fetch('https://api.zebpay.com/api/v1/ticker?currencyCode=INR')
+            fetch('https://www.zebapi.com/api/v1/market/ticker/btc/inr')
             .then(response => response.json())
             .then(data => {
                 let d = moment().format('h:mm:ss a');
